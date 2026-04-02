@@ -649,7 +649,9 @@ _opencode_sessions() {
 
   # Use cached or retrieved data
   if [[ ${#_opencode_session_list} -gt 0 ]]; then
-    _describe -t sessions 'opencode session' _opencode_session_list
+    # Use -V to preserve the time_updated DESC order from SQL query
+    # Without -V, _describe sorts alphabetically by the completion string (ID)
+    _describe -t sessions -V 'opencode session' _opencode_session_list
   else
     _message "no sessions found"
     return 1
