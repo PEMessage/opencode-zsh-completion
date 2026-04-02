@@ -26,31 +26,18 @@ Zsh completions for [opencode](https://github.com/opencode-ai/opencode), an AI-p
 
 ## Why This Completion?
 
-You might wonder: *"Why not just use `opencode completion zsh >> ~/.zshrc`?"*
+The built-in `opencode completion zsh` only provides **basic flag completion** (`-h`, `--help`, etc.).
 
-The built-in `opencode completion` command only generates a **static** completion script with minimal functionality:
+This project adds:
 
-```zsh
-# What opencode completion provides:
-❌ Only basic flag completion (-h, --help, -v, --version, etc.)
-❌ No subcommand descriptions
-❌ No session ID completion (opencode -s <TAB> shows nothing useful)
-❌ No model name completion
-❌ No agent name completion
-❌ No cached results (slow on every Tab press)
-```
-
-This project provides **dynamic, intelligent completions**:
-
-```zsh
-# What this completion provides:
-✅ Smart session selection — `opencode -s <TAB>` shows recent sessions with metadata
-✅ Model name completion — `opencode -m <TAB>` lists all available models from cache
-✅ Agent name completion — `opencode --agent <TAB>` suggests installed agents
-✅ Subcommand descriptions — `opencode <TAB>` shows what each command does
-✅ Cached results — Fast completion using zsh's cache API
-✅ All subcommands — mcp, debug, providers, session, github, etc.
-```
+| Feature | Built-in | This Project |
+|---------|----------|--------------|
+| Basic flags | ✅ | ✅ |
+| Session completion (`-s <TAB>`) | ❌ | ✅ with metadata |
+| Model completion (`-m <TAB>`) | ❌ | ✅ cached |
+| Agent completion (`--agent <TAB>`) | ❌ | ✅ |
+| Subcommand descriptions | ❌ | ✅ |
+| All subcommands (mcp, debug, etc.) | ❌ | ✅ |
 
 ## Features
 
