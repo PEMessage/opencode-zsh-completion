@@ -196,6 +196,19 @@ The location where session data is cached (auto-configured by default):
 zstyle ':completion:*:opencode:*' cache-path "${ZSH_CACHE_DIR:-$HOME/.cache/zsh}/opencode"
 ```
 
+## Development
+
+When extending this completion, use this prompt to guide AI assistants:
+
+```
+Please add more opencode completions to _opencode.
+
+Requirements:
+- 'opencode -s' (session completion) is already stable — DO NOT break it
+- Load the smux skill to test completions in a background tmux session
+- Environment is already set up; current directory is in $fpath
+```
+
 ## License
 
 GNU Affero General Public License v3.0 (AGPL-3.0) - see [LICENSE](LICENSE) file for details.
