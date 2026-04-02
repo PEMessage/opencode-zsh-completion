@@ -51,7 +51,10 @@ _opencode() {
 (( $+functions[_opencode_sessions] )) ||
 _opencode_sessions() {
   local -a comp_list
-  local update_policy
+  local update_policy session_limit
+
+  # Get session limit from zstyle (default: 30)
+  zstyle -s ":completion:${curcontext}:" session-limit session_limit || session_limit=30
 
   # Set up caching policy for this completion context
   zstyle -s ":completion:${curcontext}:" cache-policy update_policy
@@ -72,18 +75,23 @@ _opencode_sessions() {
 
     if [[ -n "$db_path" && -f "$db_path" ]]; then
       # Fetch session data from database
-      # Filter out subagent sessions, order by most recently updated, limit to 15
+      # Filter out subagent sessions, order by most recently updated
       local fresh_data
-      fresh_data=$(opencode db "SELECT id, directory, title, datetime(time_updated / 1000, 'unixepoch') FROM session WHERE title NOT LIKE '%subagent)' ORDER BY time_updated DESC LIMIT 30" 2>/dev/null | /usr/bin/tail -n +2)
+      fresh_data=$(opencode db "
+          SELECT id, directory, title, datetime(time_updated / 1000, 'unixepoch') FROM session
+          WHERE title NOT LIKE '%subagent)'
+          ORDER BY time_updated DESC
+          LIMIT ${session_limit}
+      " 2>/dev/null | /usr/bin/tail -n +2)
 
       # Build completion list array
       local -a _opencode_session_list
       _opencode_session_list=()
 
       if [[ -n "$fresh_data" ]]; then
-        while IFS=$'\t' read -r id path title time_updated; do
+        while IFS=$'\t' read -r id dir_path title time_updated; do
           if [[ -n "$id" && -n "$title" ]]; then
-            _opencode_session_list+=("${id}:${title} (${path} | ${time_updated})")
+            _opencode_session_list+=("${id}:${title} (${dir_path} | ${time_updated})")
           fi
         done <<< "$fresh_data"
       fi
