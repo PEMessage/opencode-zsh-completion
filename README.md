@@ -26,18 +26,18 @@ Zsh completions for [opencode](https://github.com/opencode-ai/opencode), an AI-p
 
 ## Why This Completion?
 
-The built-in `opencode completion zsh` only provides **basic flag completion** (`-h`, `--help`, etc.).
+The built-in `opencode completion zsh` provides **basic subcommands** (what you see when you run `opencode --get-yargs-completions`).
 
-This project adds:
+This project adds **intelligent argument completion**:
 
 | Feature | Built-in | This Project |
 |---------|----------|--------------|
-| Basic flags | ✅ | ✅ |
+| Basic subcommands | ✅ | ✅ |
 | Session completion (`-s <TAB>`) | ❌ | ✅ with metadata |
 | Model completion (`-m <TAB>`) | ❌ | ✅ cached |
 | Agent completion (`--agent <TAB>`) | ❌ | ✅ |
-| Subcommand descriptions | ❌ | ✅ |
-| All subcommands (mcp, debug, etc.) | ❌ | ✅ |
+| Subcommand options | ❌ | ✅ |
+| MCP server names | ❌ | ✅ |
 
 ## Features
 
