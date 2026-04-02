@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="#why-this-completion">Why?</a> •
   <a href="#features">Features</a> •
   <a href="#installation">Installation</a> •
   <a href="#usage">Usage</a> •
@@ -22,6 +23,34 @@
 ---
 
 Zsh completions for [opencode](https://github.com/opencode-ai/opencode), an AI-powered CLI tool.
+
+## Why This Completion?
+
+You might wonder: *"Why not just use `opencode completion zsh >> ~/.zshrc`?"*
+
+The built-in `opencode completion` command only generates a **static** completion script with minimal functionality:
+
+```zsh
+# What opencode completion provides:
+❌ Only basic flag completion (-h, --help, -v, --version, etc.)
+❌ No subcommand descriptions
+❌ No session ID completion (opencode -s <TAB> shows nothing useful)
+❌ No model name completion
+❌ No agent name completion
+❌ No cached results (slow on every Tab press)
+```
+
+This project provides **dynamic, intelligent completions**:
+
+```zsh
+# What this completion provides:
+✅ Smart session selection — `opencode -s <TAB>` shows recent sessions with metadata
+✅ Model name completion — `opencode -m <TAB>` lists all available models from cache
+✅ Agent name completion — `opencode --agent <TAB>` suggests installed agents
+✅ Subcommand descriptions — `opencode <TAB>` shows what each command does
+✅ Cached results — Fast completion using zsh's cache API
+✅ All subcommands — mcp, debug, providers, session, github, etc.
+```
 
 ## Features
 
