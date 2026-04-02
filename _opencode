@@ -1,0 +1,108 @@
+#compdef opencode
+
+# opencode zsh completion
+# Provides completions for `opencode -s` session selection
+# Uses zsh official cache API: _cache_invalid, _retrieve_cache, _store_cache
+
+# Ensure cache is enabled and set cache path
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*:opencode:*' cache-path "${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/zsh}/opencode"
+
+# Caching policy: invalidate cache when opencode database file changes
+# This function is called by _cache_invalid to determine if cache should be regenerated
+_opencode_sessions_caching_policy() {
+  local db_path
+
+  # Use cached db path if available
+  if [[ -z "${_opencode_db_path}" ]]; then
+    _opencode_db_path=$(opencode db path 2>/dev/null)
+  fi
+  db_path="${_opencode_db_path}"
+
+  # Invalidate if no database path
+  [[ -z "$db_path" ]] && return 0
+
+  # Invalidate if database file doesn't exist
+  [[ ! -f "$db_path" ]] && return 0
+
+  # Invalidate if database is newer than cache file
+  # -nt operator: true if first file is newer than second file
+  [[ "$db_path" -nt "$1" ]] && return 0
+
+  # Cache is still valid
+  return 1
+}
+
+# Main completion function
+_opencode() {
+  local curcontext="$curcontext" state line
+
+  _arguments -C \
+    '(-s --session)'{-s,--session}'[Select session by ID or title]:session:_opencode_sessions' \
+    '(-h --help)'{-h,--help}'[Show help message]' \
+    '(-v --version)'{-v,--version}'[Show version]' \
+    '(-n --new)'{-n,--new}'[Create new session]:directory:_directories' \
+    '(-d --directory)'{-d,--directory}'[Set working directory]:directory:_directories' \
+    '*:file:_files'
+}
+
+# Complete session IDs and titles using zsh cache API
+# The cache persists across multiple Tab presses in the same shell
+(( $+functions[_opencode_sessions] )) ||
+_opencode_sessions() {
+  local -a comp_list
+  local update_policy
+
+  # Set up caching policy for this completion context
+  zstyle -s ":completion:${curcontext}:" cache-policy update_policy
+  [[ -z "$update_policy" ]] && zstyle ":completion:${curcontext}:" cache-policy _opencode_sessions_caching_policy
+
+  # Use zsh cache API: check if invalid, try to retrieve, or rebuild
+  # _cache_invalid returns 0 (true) if cache needs to be regenerated
+  # _retrieve_cache returns 0 (true) if successfully retrieved
+  if _cache_invalid opencode-sessions || ! _retrieve_cache opencode-sessions; then
+    # Cache miss or invalid - fetch fresh data from database
+    local db_path
+
+    # Get database path (may be cached in _opencode_db_path)
+    if [[ -z "${_opencode_db_path}" ]]; then
+      _opencode_db_path=$(opencode db path 2>/dev/null)
+    fi
+    db_path="${_opencode_db_path}"
+
+    if [[ -n "$db_path" && -f "$db_path" ]]; then
+      # Fetch session data from database
+      # Filter out subagent sessions, order by most recently updated, limit to 15
+      local fresh_data
+      fresh_data=$(opencode db "SELECT id, directory, title, datetime(time_updated / 1000, 'unixepoch') FROM session WHERE title NOT LIKE '%subagent)' ORDER BY time_updated DESC LIMIT 30" 2>/dev/null | /usr/bin/tail -n +2)
+
+      # Build completion list array
+      local -a _opencode_session_list
+      _opencode_session_list=()
+
+      if [[ -n "$fresh_data" ]]; then
+        while IFS=$'\t' read -r id path title time_updated; do
+          if [[ -n "$id" && -n "$title" ]]; then
+            _opencode_session_list+=("${id}:${title} (${path} | ${time_updated})")
+          fi
+        done <<< "$fresh_data"
+      fi
+
+      # Store in zsh cache (persists across completion calls)
+      # This creates a cache file that survives multiple Tab presses
+      if [[ ${#_opencode_session_list} -gt 0 ]]; then
+        _store_cache opencode-sessions _opencode_session_list
+      fi
+    fi
+  fi
+
+  # Use cached or retrieved data
+  if [[ ${#_opencode_session_list} -gt 0 ]]; then
+    _describe -t sessions 'opencode session' _opencode_session_list
+  else
+    _message "no sessions found"
+    return 1
+  fi
+}
+
+_opencode "$@"
