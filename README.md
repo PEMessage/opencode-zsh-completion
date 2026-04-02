@@ -41,6 +41,8 @@ The built-in `opencode completion zsh` only provides **subcommand names** (e.g.,
 | MCP server names | ❌ | ✅ |
 
 ## Features
+<img width="2503" height="1082" alt="image" src="https://github.com/user-attachments/assets/3b2d805c-a9c7-4566-9493-33258f51f7b4" />
+
 
 - **Complete option completion** for all `opencode` flags (`-m`, `-c`, `-s`, `--model`, `--session`, `--agent`, etc.)
 - **Subcommand completion** with descriptions for all commands:
