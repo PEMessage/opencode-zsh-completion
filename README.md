@@ -26,17 +26,18 @@ Zsh completions for [opencode](https://github.com/opencode-ai/opencode), an AI-p
 
 ## Why This Completion?
 
-The built-in `opencode completion zsh` provides **basic subcommands** (what you see when you run `opencode --get-yargs-completions`).
+The built-in `opencode completion zsh` only provides **subcommand names** (e.g., `mcp`, `debug`, `providers`), but no completion for:
 
-This project adds **intelligent argument completion**:
+- **Flags/Options** — typing `opencode -<TAB>` or `opencode --<TAB>` shows nothing
+- **Argument values** — `opencode -s <TAB>` or `opencode -m <TAB>` has no completion
 
-| Feature | Built-in | This Project |
-|---------|----------|--------------|
-| Basic subcommands | ✅ | ✅ |
-| Session completion (`-s <TAB>`) | ❌ | ✅ with metadata |
-| Model completion (`-m <TAB>`) | ❌ | ✅ cached |
-| Agent completion (`--agent <TAB>`) | ❌ | ✅ |
-| Subcommand options | ❌ | ✅ |
+| What | Built-in | This Project |
+|------|----------|--------------|
+| Subcommand names | ✅ | ✅ |
+| Flags & options (`-m`, `--model`, etc.) | ❌ | ✅ |
+| Session values (`-s <TAB>`) | ❌ | ✅ with metadata |
+| Model values (`-m <TAB>`) | ❌ | ✅ cached |
+| Agent values (`--agent <TAB>`) | ❌ | ✅ |
 | MCP server names | ❌ | ✅ |
 
 ## Features
