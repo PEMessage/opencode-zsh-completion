@@ -433,16 +433,8 @@ _opencode_providers_commands() {
 }
 
 _opencode_providers_list() {
-  local -a providers
-  providers=(
-    'deepseek:DeepSeek API'
-    'moonshotai-cn:Moonshot AI (China)'
-    'openrouter:OpenRouter'
-    'alibaba-coding-plan-cn:Alibaba Coding Plan (China)'
-    'fireworks-ai:Fireworks AI'
-    'opencode:OpenCode'
-  )
-  _describe -t providers 'provider' providers
+  # No prefill - use fallback (files)
+  _files
 }
 
 # Agent subcommand
