@@ -625,7 +625,7 @@ _opencode_sessions() {
           WHERE parent_id IS NULL
           ORDER BY time_updated DESC
           LIMIT ${session_limit}
-      " 2>/dev/null | /usr/bin/tail -n +2)
+      " 2>/dev/null | tail -n +2)
 
       # Build completion list array
       local -a _opencode_session_list
