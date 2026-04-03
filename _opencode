@@ -622,7 +622,7 @@ _opencode_sessions() {
       local fresh_data
       fresh_data=$(opencode db "
           SELECT id, directory, title, datetime(time_updated / 1000, 'unixepoch') FROM session
-          WHERE title NOT LIKE '%subagent)'
+          WHERE parent_id IS NULL
           ORDER BY time_updated DESC
           LIMIT ${session_limit}
       " 2>/dev/null | /usr/bin/tail -n +2)
