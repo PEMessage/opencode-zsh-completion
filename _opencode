@@ -47,193 +47,179 @@ _opencode() {
   local curcontext="$curcontext" state line subcmd
   local -A opt_args
 
-  # First, check if we're completing a subcommand
-  if (( CURRENT == 2 )); then
-    # Completing the first positional argument (subcommand or project path)
-    _arguments -C \
-      '(-h --help)'{-h,--help}'[Show help message]' \
-      '(-v --version)'{-v,--version}'[Show version number]' \
-      '--print-logs[Print logs to stderr]' \
-      '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-      '--pure[Run without external plugins]' \
-      '--port=[Port to listen on]:port number:' \
-      '--hostname=[Hostname to listen on]:hostname:(127.0.0.1 0.0.0.0 localhost)' \
-      '--mdns[Enable mDNS service discovery]' \
-      '--mdns-domain=[Custom domain name for mDNS]:domain:' \
-      '--cors=[Additional domains for CORS]:domain:' \
-      '(-m --model)'{-m,--model}'[Model to use]:model:_opencode_models' \
-      '(-c --continue)'{-c,--continue}'[Continue the last session]' \
-      '(-s --session)'{-s,--session}'[Session id to continue]:session:_opencode_sessions' \
-      '--fork[Fork the session when continuing]' \
-      '--prompt=[Prompt to use]:prompt:' \
-      '--agent=[Agent to use]:agent:_opencode_agents' \
-      '1: :_opencode_commands' \
-      && return 0
-  fi
+  # Parse global options and the first positional argument (subcommand).
+  # When CURRENT==2 we land in state "cmds" and complete subcommands.
+  # When CURRENT>2  we land in state "args"; line[1] is the subcommand
+  # and line[2..] are the words that follow it.
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help message]' \
+    '(-v --version)'{-v,--version}'[Show version number]' \
+    '--print-logs[Print logs to stderr]' \
+    '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+    '--pure[Run without external plugins]' \
+    '--port=[Port to listen on]:port number:' \
+    '--hostname=[Hostname to listen on]:hostname:(127.0.0.1 0.0.0.0 localhost)' \
+    '--mdns[Enable mDNS service discovery]' \
+    '--mdns-domain=[Custom domain name for mDNS]:domain:' \
+    '--cors=[Additional domains for CORS]:domain:' \
+    '(-m --model)'{-m,--model}'[Model to use]:model:_opencode_models' \
+    '(-c --continue)'{-c,--continue}'[Continue the last session]' \
+    '(-s --session)'{-s,--session}'[Session id to continue]:session:_opencode_sessions' \
+    '--fork[Fork the session when continuing]' \
+    '--prompt=[Prompt to use]:prompt:' \
+    '--agent=[Agent to use]:agent:_opencode_agents' \
+    '1: :->cmds' \
+    '*:: :->args'
 
-  # Get subcommand if present
-  subcmd="${line[1]}"
-
-  # Handle subcommand-specific completions
-  case "$subcmd" in
-    completion)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '1:shell:(bash zsh fish powershell)' \
-        && return 0
+  case "$state" in
+    cmds)
+      _opencode_commands
       ;;
-    mcp)
-      _opencode_mcp
-      return
-      ;;
-    debug)
-      _opencode_debug
-      return
-      ;;
-    providers|auth)
-      _opencode_providers
-      return
-      ;;
-    agent)
-      _opencode_agent
-      return
-      ;;
-    models)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '--verbose[Use verbose model output]' \
-        '--refresh[Refresh models cache]' \
-        '1:provider:_opencode_providers_list' \
-        && return 0
-      ;;
-    export)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '1:session:_opencode_sessions' \
-        && return 0
-      ;;
-    import)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '1:file:_files -g "*.json"' \
-        && return 0
-      ;;
-    pr)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '1:PR number:' \
-        && return 0
-      ;;
-    plugin|plug)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '1:npm module:' \
-        && return 0
-      ;;
-    db)
-      _opencode_db
-      return
-      ;;
-    session)
-      _opencode_session
-      return
-      ;;
-    github)
-      _opencode_github
-      return
-      ;;
-    run)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '(-m --model)'{-m,--model}'[Model to use]:model:_opencode_models' \
-        '(-s --session)'{-s,--session}'[Session id to continue]:session:_opencode_sessions' \
-        '--fork[Fork the session when continuing]' \
-        '*:message:' \
-        && return 0
-      ;;
-    serve|web)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '--port=[Port to listen on]:port number:' \
-        '--hostname=[Hostname to listen on]:hostname:' \
-        '--mdns[Enable mDNS service discovery]' \
-        '--mdns-domain=[Custom domain name for mDNS]:domain:' \
-        '--cors=[Additional domains for CORS]:domain:' \
-        && return 0
-      ;;
-    attach)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '1:url:_urls' \
-        && return 0
-      ;;
-    upgrade)
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '1:target:(latest stable canary)' \
-        && return 0
-      ;;
-    *)
-      # For project path or other arguments
-      _arguments \
-        '-h[Show help]' \
-        '--help[Show help]' \
-        '--print-logs[Print logs to stderr]' \
-        '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-        '--pure[Run without external plugins]' \
-        '--port=[Port to listen on]:port number:' \
-        '--hostname=[Hostname to listen on]:hostname:' \
-        '--mdns[Enable mDNS service discovery]' \
-        '--mdns-domain=[Custom domain name for mDNS]:domain:' \
-        '--cors=[Additional domains for CORS]:domain:' \
-        '(-m --model)'{-m,--model}'[Model to use]:model:_opencode_models' \
-        '(-c --continue)'{-c,--continue}'[Continue the last session]' \
-        '(-s --session)'{-s,--session}'[Session id to continue]:session:_opencode_sessions' \
-        '--fork[Fork the session when continuing]' \
-        '--prompt=[Prompt to use]:prompt:' \
-        '--agent=[Agent to use]:agent:_opencode_agents' \
-        '*:file:_files' \
-        && return 0
+    args)
+      subcmd="${line[1]}"
+      case "$subcmd" in
+        completion)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:shell:(bash zsh fish powershell)'
+          ;;
+        mcp)
+          _opencode_mcp
+          ;;
+        debug)
+          _opencode_debug
+          ;;
+        providers|auth)
+          _opencode_providers
+          ;;
+        agent)
+          _opencode_agent
+          ;;
+        models)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '--verbose[Use verbose model output]' \
+            '--refresh[Refresh models cache]' \
+            '1:provider:_opencode_providers_list'
+          ;;
+        export)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:session:_opencode_sessions'
+          ;;
+        import)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:file:_files -g "*.json"'
+          ;;
+        pr)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:PR number:'
+          ;;
+        plugin|plug)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:npm module:'
+          ;;
+        db)
+          _opencode_db
+          ;;
+        session)
+          _opencode_session
+          ;;
+        github)
+          _opencode_github
+          ;;
+        run)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '(-m --model)'{-m,--model}'[Model to use]:model:_opencode_models' \
+            '(-s --session)'{-s,--session}'[Session id to continue]:session:_opencode_sessions' \
+            '--fork[Fork the session when continuing]' \
+            '*:message:'
+          ;;
+        serve|web)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '--port=[Port to listen on]:port number:' \
+            '--hostname=[Hostname to listen on]:hostname:' \
+            '--mdns[Enable mDNS service discovery]' \
+            '--mdns-domain=[Custom domain name for mDNS]:domain:' \
+            '--cors=[Additional domains for CORS]:domain:'
+          ;;
+        attach)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:url:_urls'
+          ;;
+        upgrade)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:target:(latest stable canary)'
+          ;;
+        *)
+          # Unknown subcommand – treat as project path / file
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '--port=[Port to listen on]:port number:' \
+            '--hostname=[Hostname to listen on]:hostname:' \
+            '--mdns[Enable mDNS service discovery]' \
+            '--mdns-domain=[Custom domain name for mDNS]:domain:' \
+            '--cors=[Additional domains for CORS]:domain:' \
+            '(-m --model)'{-m,--model}'[Model to use]:model:_opencode_models' \
+            '(-c --continue)'{-c,--continue}'[Continue the last session]' \
+            '(-s --session)'{-s,--session}'[Session id to continue]:session:_opencode_sessions' \
+            '--fork[Fork the session when continuing]' \
+            '--prompt=[Prompt to use]:prompt:' \
+            '--agent=[Agent to use]:agent:_opencode_agents' \
+            '*:file:_files'
+          ;;
+      esac
       ;;
   esac
 }
@@ -287,7 +273,7 @@ _opencode_mcp() {
     args)
       case "$line[1]" in
         auth|logout|debug)
-          _arguments \
+          _arguments -C \
             '-h[Show help]' \
             '--help[Show help]' \
             '--print-logs[Print logs to stderr]' \
@@ -296,12 +282,13 @@ _opencode_mcp() {
             '1:server:_opencode_mcp_servers'
           ;;
         *)
-          _arguments \
+          _arguments -C \
             '-h[Show help]' \
             '--help[Show help]' \
             '--print-logs[Print logs to stderr]' \
             '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-            '--pure[Run without external plugins]'
+            '--pure[Run without external plugins]' \
+            '1: :_opencode_mcp_commands'
           ;;
       esac
       ;;
@@ -344,7 +331,7 @@ _opencode_debug() {
     args)
       case "$line[1]" in
         agent)
-          _arguments \
+          _arguments -C \
             '-h[Show help]' \
             '--help[Show help]' \
             '--print-logs[Print logs to stderr]' \
@@ -353,12 +340,13 @@ _opencode_debug() {
             '1:agent:_opencode_agents'
           ;;
         *)
-          _arguments \
+          _arguments -C \
             '-h[Show help]' \
             '--help[Show help]' \
             '--print-logs[Print logs to stderr]' \
             '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-            '--pure[Run without external plugins]'
+            '--pure[Run without external plugins]' \
+            '1: :_opencode_debug_commands'
           ;;
       esac
       ;;
@@ -400,7 +388,7 @@ _opencode_providers() {
     args)
       case "$line[1]" in
         login)
-          _arguments \
+          _arguments -C \
             '-h[Show help]' \
             '--help[Show help]' \
             '--print-logs[Print logs to stderr]' \
@@ -409,12 +397,13 @@ _opencode_providers() {
             '1:url:_urls'
           ;;
         *)
-          _arguments \
+          _arguments -C \
             '-h[Show help]' \
             '--help[Show help]' \
             '--print-logs[Print logs to stderr]' \
             '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
-            '--pure[Run without external plugins]'
+            '--pure[Run without external plugins]' \
+            '1: :_opencode_providers_commands'
           ;;
       esac
       ;;
@@ -514,7 +503,7 @@ _opencode_db() {
   case "$state" in
     args)
       if [[ "$line[1]" == "migrate" ]]; then
-        _arguments \
+        _arguments -C \
           '-h[Show help]' \
           '--help[Show help]' \
           '--print-logs[Print logs to stderr]' \
@@ -523,7 +512,7 @@ _opencode_db() {
           '--format=[Output format]:format:(json tsv)'
       else
         # For query argument
-        _arguments \
+        _arguments -C \
           '-h[Show help]' \
           '--help[Show help]' \
           '--print-logs[Print logs to stderr]' \
