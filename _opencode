@@ -537,15 +537,51 @@ _opencode_db_commands() {
 
 # Session subcommand
 _opencode_session() {
-  _arguments \
+  local curcontext="$curcontext" state line
+  local -A opt_args
+
+  _arguments -C \
     '-h[Show help]' \
     '--help[Show help]' \
     '--print-logs[Print logs to stderr]' \
     '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
     '--pure[Run without external plugins]' \
     '1: :_opencode_session_commands' \
-    '2: :_opencode_sessions' \
-    && return 0
+    '*:: :->args'
+
+  case "$state" in
+    args)
+      case "${line[1]}" in
+        list)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '(-n --max-count)'{-n,--max-count}'[Limit to N most recent sessions]:count:' \
+            '--format=[Output format]:format:(table json)'
+          ;;
+        delete)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]' \
+            '1:session:_opencode_sessions'
+          ;;
+        *)
+          _arguments -C \
+            '-h[Show help]' \
+            '--help[Show help]' \
+            '--print-logs[Print logs to stderr]' \
+            '--log-level=[Log level]:log level:(DEBUG INFO WARN ERROR)' \
+            '--pure[Run without external plugins]'
+          ;;
+      esac
+      ;;
+  esac
 }
 
 _opencode_session_commands() {
