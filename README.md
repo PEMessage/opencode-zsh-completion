@@ -210,6 +210,13 @@ Requirements:
 - Environment is already set up; current directory is in $fpath
 ```
 
+## Build Your Own Completion
+
+Feed [`AGENTS.md`](AGENTS.md) to your AI assistant — it contains everything needed to write, debug, or extend zsh completions.
+
+> "I took your AGENTS.md and the ai almost one-shot it and for the first time I actually get what is happening on the zsh completion itself."
+> — [Gerson Gallo](https://github.com/ggallovalle), [opencode-zsh-completion#1](https://github.com/PEMessage/opencode-zsh-completion/issues/1)
+
 ## License
 
 GNU Affero General Public License v3.0 (AGPL-3.0) - see [LICENSE](LICENSE) file for details.
