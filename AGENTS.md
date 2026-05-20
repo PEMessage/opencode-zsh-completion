@@ -139,6 +139,94 @@ _mycommand() {
 _mycommand "$@"
 ```
 
+## Multi-Level Subcommand Pattern
+
+Standard pattern for commands with nested subcommands (e.g. `opencode auth login`, `git bisect start`).
+
+### Structure
+
+**Main function** – parse global options, dispatch by subcommand:
+
+```zsh
+_mycommand() {
+  local curcontext="$curcontext" state line
+  local -A opt_args
+
+  _arguments -C \
+    '(-h --help)'{-h,--help}'[Show help]' \
+    '1: :->cmds' \
+    '*:: :->args'
+
+  case "$state" in
+    cmds)
+      _mycommand_commands
+      ;;
+    args)
+      case "${line[1]}" in
+        auth)
+          _mycommand_auth
+          ;;
+        debug)
+          _mycommand_debug
+          ;;
+        *)
+          _files
+          ;;
+      esac
+      ;;
+  esac
+}
+```
+
+**Subcommand function** – parse its own options and arguments:
+
+```zsh
+_mycommand_auth() {
+  local curcontext="$curcontext" state line
+  local -A opt_args
+
+  _arguments -C \
+    '-h[Show help]' \
+    '1: :_mycommand_auth_commands' \
+    '*:: :->args'
+
+  case "$state" in
+    args)
+      case "${line[1]}" in
+        login)
+          _arguments -C '1:url:_urls'
+          ;;
+        *)
+          _arguments -C '1: :_mycommand_auth_commands'
+          ;;
+      esac
+      ;;
+  esac
+}
+```
+
+### Critical Rules
+
+1. **Never use `if (( CURRENT == 2 ))` guard**  
+   `_arguments -C` must run unconditionally so `line[]` is populated for all cursor positions.
+
+2. **Nested `_arguments` must use `-C`**  
+   Without `-C`, the inner `_arguments` re-parses `words[]` from scratch and sees the already-typed subcommand as position 1, producing `-- no more arguments --`.
+
+3. **Read the subcommand via `line[1]`, not `$words[2]`**  
+   The `*:: :->args` rule shifts remaining words into `line[]`; `$words[]` still holds the full command line.
+
+### Reference Implementations
+
+- `_git` (`/usr/share/zsh/functions/Completion/Unix/_git`)  
+  `8080: _git()` – uses `1: :->command` / `*:: :->option-or-argument`, then `_call_function ret _git-$words[1]` for dynamic dispatch to `_git-add`, `_git-checkout`, etc.
+
+- `_svn` (`/usr/share/zsh/functions/Completion/Unix/_subversion`)  
+  `3: _svn()` – uses static `case $state in (args) ... esac` with `_svn_cmds` lookup; each subcommand's completion defined inline.
+
+- `_git-bisect` (`_git:181`)  
+  Shows nested `case $line[1] in ... esac` with inner `_arguments -C` for `start`, `run`, `reset`, etc.
+
 ## Caching with `_store_cache`
 
 Every Tab press in zsh starts a new process, so **global variables do NOT persist**. Use the official cache API:
